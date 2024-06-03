@@ -1,0 +1,64 @@
+﻿@page "/"
+@using MudBlazor
+@using FluentValidation
+@using FluentValidation.Results
+
+@inject IValidator<UserModel> Validator
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+
+
+<EditForm  EditContext="@editContext">
+    <MudContainer>
+        <MudItem xs="12">
+            <CustomMudTextField TValue="string" Label="First Name" @bind-Value="userModel.FirstName" For="() => userModel.FirstName" ValidationState="validationTriggered" />
+        </MudItem>
+        <MudItem xs="12">
+            <CustomMudTextField TValue="string" Label="Last Name" @bind-Value="userModel.LastName" For="() => userModel.LastName" ValidationState="validationTriggered" />
+        </MudItem>
+        <MudItem xs="12">
+            <CustomMudTextField TValue="string" Label="Status" @bind-Value="userModel.Status" For="() => userModel.Status" ValidationState="validationTriggered" />
+        </MudItem>
+        <MudButton Type="Button" OnClick="HandleSubmit">Submit</MudButton>
+    </MudContainer>
+</EditForm>
+
+@code {
+    private UserModel userModel = new UserModel();
+    private EditContext editContext;
+    private ValidationResult validationResult;
+    private bool validationTriggered = false;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(userModel);
+    }
+
+    private async Task HandleSubmit()
+    {
+        validationResult = await Validator.ValidateAsync(userModel);
+        validationTriggered = true;
+
+        if (validationResult.IsValid)
+        {
+            // Handle valid form submission logic
+            Console.WriteLine("Form is valid");
+        }
+        else
+        {
+            //// Update the UI to reflect validation errors
+            //foreach (var error in validationResult.Errors)
+            //{
+            //    editContext.NotifyFieldChanged(new FieldIdentifier(userModel, error.PropertyName));
+            //}
+        }
+    }
+}
+
