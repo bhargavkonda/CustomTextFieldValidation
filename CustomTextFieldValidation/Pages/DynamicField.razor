@@ -1,0 +1,18 @@
+﻿@typeparam TValue
+
+@if (typeof(TValue) == typeof(string))
+{
+    <CustomMudTextField TValue="TValue" Label="@Label" @bind-Value="@Value" />
+}
+else if (typeof(TValue) == typeof(int))
+{
+    <CustomMudIntegerField TValue="TValue" Label="@Label" @bind-Value="@Value" />
+}
+
+@code {
+    [Parameter]
+    public string Label { get; set; }
+
+    [Parameter]
+    public TValue Value { get; set; }
+}

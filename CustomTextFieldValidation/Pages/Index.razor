@@ -2,6 +2,7 @@
 @using MudBlazor
 @using FluentValidation
 @using FluentValidation.Results
+@using System.Linq.Expressions
 
 @inject IValidator<UserModel> Validator
 
@@ -15,17 +16,39 @@ Welcome to your new app.
 
 
 
-<EditForm  EditContext="@editContext">
+<EditForm EditContext="@editContext">
     <MudContainer>
-        <MudItem xs="12">
-            <CustomMudTextField TValue="string" Label="First Name" @bind-Value="userModel.FirstName" For="() => userModel.FirstName" ValidationState="validationTriggered" />
-        </MudItem>
-        <MudItem xs="12">
-            <CustomMudTextField TValue="string" Label="Last Name" @bind-Value="userModel.LastName" For="() => userModel.LastName" ValidationState="validationTriggered" />
-        </MudItem>
-        <MudItem xs="12">
-            <CustomMudTextField TValue="string" Label="Status" @bind-Value="userModel.Status" For="() => userModel.Status" ValidationState="validationTriggered" />
-        </MudItem>
+
+
+        @foreach (var property in typeof(UserModel).GetProperties())
+        {
+            var propertyName = property.Name;
+            var value = property.GetValue(userModel);
+            var propertyType = Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType;
+
+            var bindValue = GetValueBinding(propertyName);
+
+            switch (propertyType.Name)
+            {
+                case "String":
+                    <MudItem xs="12">
+                        <CustomMudTextField TValue="string" Label="@propertyName" @bind-Value="userModel.FirstName" For="() => userModel.LastName" ValidationState="validationTriggered" />
+                    </MudItem>
+                    break;
+                case "Int32":
+                    <MudItem xs="12">
+                        <CustomMudIntegerField TValue="int" Label="@propertyName" @bind-Value="userModel.Age" For="() => userModel.Age" ValidationState="validationTriggered" />
+                    </MudItem>
+                    break;
+                // Add cases for other data types if needed
+                default:
+                    // Handle other data types
+                    break;
+            }
+        }
+
+
+
         <MudButton Type="Button" OnClick="HandleSubmit">Submit</MudButton>
     </MudContainer>
 </EditForm>
@@ -59,6 +82,11 @@ Welcome to your new app.
             //    editContext.NotifyFieldChanged(new FieldIdentifier(userModel, error.PropertyName));
             //}
         }
+    }
+    private object GetValueBinding(string propertyName)
+    {
+        var property = typeof(UserModel).GetProperty(propertyName);
+        return property.GetValue(userModel);
     }
 }
 

@@ -1,0 +1,96 @@
+﻿@using FluentValidation
+@using FluentValidation.Internal
+@using MudBlazor
+@using System.Linq.Expressions
+
+<MudDatePicker @bind-Date="Value" Label="@Label" For="@For" Error="@HasError" ErrorText="@errorText"
+               OnBlur="@OnBlur" OnInput="@OnInput" />
+
+@code {
+    [Inject]
+    public IValidator<UserModel> Validator { get; set; }
+
+    [Parameter]
+    public string Label { get; set; }
+
+
+
+
+    [Parameter]
+    public EventCallback<DateTime?> ValueChanged { get; set; }
+
+    [Parameter]
+    public Expression<Func<DateTime?>> For { get; set; }
+
+    [Parameter]
+    public bool ValidationState { get; set; }
+
+    private string errorText;
+    private DateTime? _value;
+    private UserModel _userModel;
+    private bool HasError => !string.IsNullOrEmpty(errorText);
+
+    [Parameter]
+    public DateTime? Value
+    {
+        get => _value;
+        set
+        {
+            if (_value != value)
+            {
+                _value = value;
+                ValueChanged.InvokeAsync(value);
+                ClearValidation();
+            }
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (ValidationState)
+        {
+            ValidateFieldAsync().GetAwaiter().GetResult();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        // Find the parent EditContext
+        var editContext = CascadingEditContext ?? throw new InvalidOperationException("EditContext is required");
+
+        // Retrieve the UserModel instance from the EditContext
+        _userModel = editContext.Model as UserModel;
+    }
+
+    private async Task OnBlur(FocusEventArgs e)
+    {
+        await ValidateFieldAsync();
+    }
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        ClearValidation();
+    }
+
+    private async Task ValidateFieldAsync()
+    {
+        if (Validator != null && _userModel != null)
+        {
+            var propertyName = ((MemberExpression)For.Body).Member.Name;
+            var context = new ValidationContext<UserModel>(_userModel, new PropertyChain(), new MemberNameValidatorSelector(new[] { propertyName }));
+            var result = await Validator.ValidateAsync(context);
+            var error = result.Errors.FirstOrDefault(e => e.PropertyName == propertyName);
+            errorText = error?.ErrorMessage;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearValidation()
+    {
+        errorText = null;
+        StateHasChanged();
+    }
+
+    [CascadingParameter]
+    private EditContext CascadingEditContext { get; set; }
+}

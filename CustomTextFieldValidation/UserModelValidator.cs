@@ -17,6 +17,16 @@ namespace CustomTextFieldValidation
             RuleFor(x => x.Status)
                 .NotEmpty().WithMessage("Status is required.")
                 .MaximumLength(20).WithMessage("Status cannot exceed 20 characters.");
+
+            RuleFor(x => x.Age).InclusiveBetween(18, 120);
+            RuleFor(x => x.DateOfBirth).NotEmpty().Must(BeAValidDate).WithMessage("Invalid date of birth");
+
+
+        }
+        private bool BeAValidDate(DateTime? date)
+        {
+            // Replace this with your custom date validation logic
+            return date < DateTime.Now;
         }
     }
 }
